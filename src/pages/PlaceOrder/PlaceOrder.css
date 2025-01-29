@@ -1,0 +1,174 @@
+.place-order{
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 50px;
+    margin-top: 100px;
+}
+.place-order-left{
+    width: 100%;
+    max-width: max(30%, 500px);
+}
+.place-order-left .title{
+    font-size: 30px;
+    font-weight: 600;
+    margin-bottom: 50px;
+}
+.place-order-left input{
+    margin-bottom: 15px;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #c5c5c5;
+    border-radius: 4px;
+    outline-color: tomato;
+}
+.place-order-left .multi-fields{
+    display: flex;
+    gap: 10px;
+}
+.place-order-right{
+    width: 100%;
+    max-width: max(40%, 500px);
+}
+.place-order .cart-total button{
+    margin-top: 30px;
+}
+
+.payment-method {
+    margin-top: 30px;
+    padding: 20px;
+    border: 1px solid #c5c5c5;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+.payment-method p {
+    font-size: 20px;
+    font-weight: 300;
+    margin-bottom: 15px;
+}
+
+.payment-method label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid #c5c5c5;
+    border-radius: 4px;
+    transition: background-color 0.3s, border-color 0.3s;
+    position: relative;
+}
+
+.payment-method input[type="radio"] {
+    position: absolute;
+    opacity: 0; /* Hide default radio button */
+}
+
+.payment-method .custom-radio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #c5c5c5;
+    border-radius: 50%;
+    margin-right: 10px;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.payment-method input[type="radio"]:checked + .custom-radio {
+    background-color: tomato;
+    border-color: tomato;
+}
+
+.payment-method input[type="radio"]:checked + .custom-radio::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: white;
+    display: block;
+}
+
+.payment-method label:hover {
+    background-color: #f5f5f5;
+}
+
+.payment-method span {
+    display: inline-block;
+    width: calc(100% - 30px); /* Adjust width to account for radio button */
+}
+/* 
+:root .emaill {
+    background-color: black;
+}
+:root .emaill{
+    color: white;
+}
+
+:root .streett {
+    background-color: black;
+}
+:root .streett{
+    color: white;
+}
+
+:root .phonee {
+    background-color: black;
+}
+:root .phonee{
+    color: white;
+}
+
+
+.lightcolors .emaill {
+    background-color: white;
+}
+.lightcolors .emaill{
+    color: black;
+}
+
+.lightcolors .streett {
+    background-color: white;
+}
+.lightcolors .streett{
+    color: black;
+}
+
+.lightcolors .phonee {
+    background-color: white;
+}
+.lightcolors .phonee{
+    color: black;
+}
+
+
+:root .multi-fields input {
+    background-color: black;
+    color: white; 
+}
+
+:root .multi-fields input::placeholder {
+    color: white;
+}
+
+
+.lightcolors .multi-fields input {
+    background-color: white;
+    color: black;
+}
+.lightcolors .multi-fields input::placeholder {
+    color: black;
+}
+
+
+:root .title {
+    color: white;
+}
+
+.lightcolors .title {
+    color: black;
+} */
