@@ -1,20 +1,34 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Navbar.css';
 import { assets } from '../../assets/assets';
 import { StoreContext } from '../../context/StoreContext';
+import { getAuth, signOut } from 'firebase/auth';
+import { auth } from '../../config/firebase';
 
 const Navbar = ({ setShowLogin }) => {
     const [menu, setMenu] = useState("home");
-    const { totoalAmoutCartAmount, token, setToken } = useContext(StoreContext)
+    const { totoalAmoutCartAmount } = useContext(StoreContext);
 
+    const [user, setUser] = useState(null);
     const navigate = useNavigate();
-    const logout = () => {
-        localStorage.removeItem("token")
-        setToken("")
-        navigate("/")
-    }
 
+    // Check for user authentication status on component mount
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged(setUser);
+        return () => unsubscribe(); // Cleanup subscription on unmount
+    }, []);
+
+    const logout = () => {
+        signOut(auth)
+            .then(() => {
+                setUser(null); // Set user to null after logout
+                navigate("/");
+            })
+            .catch((error) => {
+                console.error("Logout error: ", error.message);
+            });
+    };
 
     return (
         <div className='navbar'>
@@ -26,22 +40,25 @@ const Navbar = ({ setShowLogin }) => {
                 <a href='#footer' onClick={() => setMenu("contact-us")} className={menu === "contact-us" ? "active" : ""}>contact us</a>
             </ul>
             <div className="navbar-right">
-                <img src={assets.search_icon} alt="search icon"></img>
+                <img src={assets.search_icon} alt="search icon" />
                 <div className="navbar-search-icon">
                     <Link to='/cart' ><img src={assets.basket_icon} alt="basket icon" /></Link>
                     <div className={totoalAmoutCartAmount() === 0 ? "" : "dot"}></div>
                 </div>
-                {!token ? <button onClick={() => setShowLogin(true)}>Sign in</button> :
+                {!user ? (
+                    <>
+                        <button onClick={() => setShowLogin(true)}>Sign in</button>
+                    </>
+                ) : (
                     <div className='navbar-profile'>
-                        <img src={assets.profile_icon} alt=""></img>
+                        <img src={assets.profile_icon} alt="profile icon" />
                         <ul className='nav-profile-dropdown'>
-                            <li onClick={() => navigate("/myorders")} ><img src={assets.bag_icon} alt=""></img><p>Orders</p></li>
-                            <hr></hr>
-                            <li onClick={logout}><img src={assets.logout_icon} alt=""></img><p>Logut</p></li>
+                            <li onClick={() => navigate("/myorders")} ><img src={assets.bag_icon} alt="orders icon" /><p>Orders</p></li>
+                            <hr />
+                            <li onClick={logout}><img src={assets.logout_icon} alt="logout icon" /><p>Logout</p></li>
                         </ul>
-
-                    </div>}
-
+                    </div>
+                )}
             </div>
         </div>
     );

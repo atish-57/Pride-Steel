@@ -1,21 +1,25 @@
-import React, { useContext, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './LoginPopup.css';
 import { assets } from '../../assets/assets';
-import { StoreContext } from '../../context/StoreContext';
-import axios from 'axios';
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from '../../../config/firebase';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  sendEmailVerification, 
+  signOut 
+} from 'firebase/auth';
+import { auth, database } from '../../config/firebase';
+import { collection, getDocs } from 'firebase/firestore';
+import { use } from 'react';
 
 const LoginPopup = ({ setShowLogin }) => {
     const [currState, setCurrState] = useState("Login");
-    const { url, token, setToken } = useContext(StoreContext);
-
     const [data, setData] = useState({
         name: "",
         email: "",
         password: ""
     });
-
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -27,33 +31,87 @@ const LoginPopup = ({ setShowLogin }) => {
         }));
     };
 
-    const onLogin = async (event) => {
-        event.preventDefault();
+    const fetchProducts = async () => {
+        try {
+            const productsCollection = collection(database, 'Products');
+            const productsSnapshot = await getDocs(productsCollection);
+            const productsList = productsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            
+            // Access the value for plain 22G
+            const plain22GValue = productsList[0].materials.plain.gauge['22G'];
+            console.log('Plain 22G value:', plain22GValue); // Should output: "250"
+            
+        } catch (error) {
+            console.error('Error fetching products:', error);
+        }
+    };
+    useEffect(() => {
+        fetchProducts();
+    }, []);
 
+    const handleGoogleSignIn = async () => {
+        setLoading(true);
+        setError(null);
+        const provider = new GoogleAuthProvider();
 
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            if (user.emailVerified) {
+                setShowLogin(false);
+            } else {
+                setError("Please verify your email before logging in.");
+                await signOut(auth);
+            }
+
+            setLoading(false);
+        } catch (err) {
+            setLoading(false);
+            setError(err.message);
+        }
+    };
+
+    const onLogin = (e) => {
+        e.preventDefault();
         setLoading(true);
         setError(null);
 
-        let newUrl = url;
         if (currState === "Login") {
-            newUrl += "/api/user/login";
+            signInWithEmailAndPassword(auth, data.email, data.password)
+                .then(async (response) => {
+                    if (response.user.emailVerified) {
+                        console.log('Logged in:', response.user);
+                        await fetchProducts();
+                        setShowLogin(false);
+                    } else {
+                        setError("Please verify your email before logging in.");
+                        signOut(auth);
+                    }
+                    setLoading(false);
+                })
+                .catch((err) => {
+                    setLoading(false);
+                    setError(err.message);
+                });
         } else {
-            newUrl += "/api/user/register";
-        }
+            createUserWithEmailAndPassword(auth, data.email, data.password)
+                .then(async (response) => {
+                    console.log('User created:', response.user);
 
-        try {
-            const response = await axios.post(newUrl, data);
-            if (response.data.success) {
-                setToken(response.data.token);
-                localStorage.setItem("token", response.data.token);
-                setShowLogin(false);
-            } else {
-                setError(response.data.message);
-            }
-        } catch (error) {
-            setError(response.data.message);
-        } finally {
-            setLoading(false);
+                    await sendEmailVerification(response.user);
+                    setError("Verification email sent. Please verify your email before logging in.");
+
+                    await signOut(auth);
+                    setLoading(false);
+                })
+                .catch((err) => {
+                    setLoading(false);
+                    setError(err.message);
+                });
         }
     };
 
@@ -96,6 +154,14 @@ const LoginPopup = ({ setShowLogin }) => {
                 <button type="submit" disabled={loading}>
                     {loading ? "Processing..." : currState === "Sign Up" ? "Create account" : "Login"}
                 </button>
+                <button 
+                    type="button" 
+                    className="google-signin-btn" 
+                    onClick={handleGoogleSignIn} 
+                    disabled={loading}
+                >
+                    Continue with Google
+                </button>
                 <div className="login-popup-condition">
                     <input type="checkbox" required />
                     <p className='continuee'>By continuing, I agree to the terms of use & privacy policy</p>
@@ -107,7 +173,6 @@ const LoginPopup = ({ setShowLogin }) => {
             </form>
         </div>
     );
-}
+};
 
 export default LoginPopup;
-
