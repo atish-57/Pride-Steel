@@ -8,6 +8,7 @@ import LoginPopup from './components/LoginPopup/LoginPopup'
 import Navbar from './components/Navbar/Navbar.jsx'
 import Verify from './Pages/Verify/Verify'
 import MyOrders from './Pages/MyOrders/MyOrders'
+import Product from './pages/Products/Products'
 
 
 const App = () => {
@@ -24,6 +25,7 @@ const App = () => {
           <Route path='/order' element={<PlaceOrder />} />
           <Route path='/verify' element={<Verify />} />
           <Route path='/myorders' element={<MyOrders />} />
+          <Route path='/products/:id' element={<Product />} />
         </Routes>
       </div>
       <Footer />

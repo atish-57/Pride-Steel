@@ -78,11 +78,11 @@ const PlaceOrder = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!token || totoalAmoutCartAmount() === 0) {
-      navigate("/cart");
-    }
-  }, [token, totoalAmoutCartAmount, navigate]);
+  // useEffect(() => {
+  //   if (!token || totoalAmoutCartAmount() === 0) {
+  //     navigate("/cart");
+  //   }
+  // }, [token, totoalAmoutCartAmount, navigate]);
 
   return (
     <form onSubmit={placeOrder} className='place-order'>

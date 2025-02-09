@@ -1,13 +1,16 @@
 import React from 'react'
 import './Cart.css'
-import { useContext } from 'react'
+import { useContext  , useState} from 'react'
 import { StoreContext } from '../../context/StoreContext'
 import { useNavigate } from 'react-router-dom'
+import { assets, food_list } from '../../assets/assets'
 
 
 const Cart = () => {
 
-  const { cartItem, food_list, removeFromCart, totoalAmoutCartAmount } = useContext(StoreContext)
+  const { totoalAmoutCartAmount } = useContext(StoreContext)
+
+   const [cartItem, SetCartItem] = useState({});
 
   const navigate = useNavigate();
   return (
@@ -16,7 +19,7 @@ const Cart = () => {
         <div className="cart-items-title">
           <p>Items</p>
           <p>Title</p>
-          <p>Price</p>
+          <p>Price</p>  
           <p>Quantity</p>
           <p>Total</p>
           <p>Remove</p>
