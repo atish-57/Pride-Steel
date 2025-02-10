@@ -8,6 +8,7 @@ import { auth } from '../../config/firebase';
 
 const Navbar = ({ setShowLogin }) => {
     const [menu, setMenu] = useState("home");
+    const [visible, setVisible] = useState(false);
     const { totoalAmoutCartAmount } = useContext(StoreContext);
 
     const [user, setUser] = useState(null);
@@ -32,7 +33,7 @@ const Navbar = ({ setShowLogin }) => {
 
     return (
         <div className='navbar'>
-            <Link to='/'><img src={assets.logo} alt="logo" className='logo' /></Link>
+            <Link to='/' className='brand-name'>Pride Steel</Link>
             <ul className="navbar-menu">
                 <Link to='/' onClick={() => setMenu("home")} className={menu === "home" ? "active" : ""}>home</Link>
                 <a href='#explore-menu' onClick={() => setMenu("menu")} className={menu === "menu" ? "active" : ""}>menu</a>
@@ -59,6 +60,26 @@ const Navbar = ({ setShowLogin }) => {
                         </ul>
                     </div>
                 )}
+                <img 
+                    src={assets.menu_icon}
+                    className="menu-icon"
+                    onClick={() => setVisible(true)} 
+                    alt="menu" 
+                />
+            </div>
+
+            {/* Mobile Menu */}
+            <div className={`mobile-menu ${visible ? 'active' : ''}`}>
+                <div className="mobile-menu-content">
+                    <div className="mobile-menu-header" onClick={() => setVisible(false)}>
+                        <img className="back-icon" src={assets.dropdown_icon} alt="back" />
+                        <p>Back</p>
+                    </div>
+                    <Link onClick={() => setVisible(false)} to='/'>HOME</Link>
+                    <Link onClick={() => setVisible(false)} to='#explore-menu'>MENU</Link>
+                    <Link onClick={() => setVisible(false)} to='#app-download'>MOBILE APP</Link>
+                    <Link onClick={() => setVisible(false)} to='#footer'>CONTACT</Link>
+                </div>
             </div>
         </div>
     );

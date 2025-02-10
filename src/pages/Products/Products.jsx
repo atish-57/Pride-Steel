@@ -12,6 +12,7 @@ const Product = () => {
   const [selectedMaterial, setSelectedMaterial] = useState('');
   const [selectedGauge, setSelectedGauge] = useState('22G');
   const [price, setPrice] = useState('');
+  const [selectedImage, setSelectedImage] = useState('');
 
   const fetchProductsData = async () => {
     try {
@@ -26,6 +27,7 @@ const Product = () => {
         });
         setSelectedSize(data.size[0]); 
         setSelectedMaterial(Object.keys(data.material)[0]);
+        setSelectedImage(data.imageLink[0]);
       }
     } catch (error) {
       console.error("Error fetching product:", error);
@@ -47,12 +49,26 @@ const Product = () => {
     <div className="product-container">
       <div className="product-main">
         <div className="product-images">
-          <div className="main-image-container">
-            <img
-              src={productsData.imageLink}
-              alt="product"
-              className="main-image"
-            />
+          <div className="image-layout">
+            <div className="thumbnail-container">
+              {productsData.imageLink.map((image, index) => (
+                <img
+                  key={index}
+                  src={image}
+                  alt={`product-${index + 1}`}
+                  onClick={() => setSelectedImage(image)}
+                  className="thumbnail-image"
+                />
+              ))}
+            </div>
+
+            <div className="main-image-container">
+              <img
+                src={selectedImage}
+                alt="product"
+                className="main-image"
+              />
+            </div>
           </div>
         </div>
 
@@ -65,7 +81,6 @@ const Product = () => {
             <img src={assets.star_icon} alt="" className="star-icon" />
             <img src={assets.star_icon} alt="" className="star-icon" />
             <img src={assets.star_dull_icon} alt="" className="star-icon" />
-            <p className="rating-count">(122)</p>
           </div>
 
           <div className="product-options">
@@ -96,7 +111,9 @@ const Product = () => {
             </div>
           </div>
 
-          <p className="product-price">₹{price}</p>
+          <p className="product-price">
+            ₹{price} <span className="price-unit">/kg</span>
+          </p>
           <p className="product-description">{productsData.description}</p>
 
           <button
@@ -109,9 +126,10 @@ const Product = () => {
           <hr className="divider" />
 
           <div className="product-features">
-            <p>100% Original product </p>
-            <p>Free delivery on order above ₹499</p>
-            <p>Easy return and exchange policy within 7 days</p>
+            {/* <p>100% Original product </p> */}
+            <p>Sample info</p>
+            {/* <p>Free delivery on order above ₹499</p>
+            <p>Easy return and exchange policy within 7 days</p> */}
           </div>
         </div>
       </div>
@@ -119,25 +137,18 @@ const Product = () => {
       <div className="description-section">
         <div className="tab-buttons">
           <b className="tab-button">Description</b>
-          <p className="tab-button">Reviews (122)</p>
         </div>
 
         <div className="tab-content">
           <p>
-            Ane-commerce website is an online platform that facilitates the
-            buying and selling of products or services over the internet. It
-            serves as a vietual marketplace where businesses and individuals.com
-            showcase ther produch, interact with customers, and conduct
-            fransactions without the need for a physical presence. E-commerce
-            websites have goned immense popularity due to their convenience,
-            accessibility, and the global reach they offer.
+            {productsData.Description}
           </p>
-          <p>
+          {/* <p>
             E-commerce websites typically display products or services along
             with detailed descriptions, images, prices, and any ovalable
             variations (eg, sizes colors). Each product uwaly has its ww
             dedicated page with relevant infurroution
-          </p>
+          </p> */}
         </div>
       </div>
     </div>
