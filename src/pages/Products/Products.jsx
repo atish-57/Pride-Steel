@@ -1,27 +1,47 @@
 import { useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { assets, food_list } from '../../assets/assets'
+import { assets } from '../../assets/assets';
+import { database } from '../../config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import './Products.css';
+
 const Product = () => {
   const { id } = useParams();
-  const [productsData, setProductsData] = useState(false);
-  const [image, setImage] = useState('');
-  const [size, setSize] = useState('');
+  const [productsData, setProductsData] = useState(null);
+  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedMaterial, setSelectedMaterial] = useState('');
+  const [selectedGauge, setSelectedGauge] = useState('22G');
+  const [price, setPrice] = useState('');
 
   const fetchProductsData = async () => {
-    food_list.map((product) => {
-      if (product._id === id) {
-        setProductsData(product);
-        setImage(product.image);
-        return null;
+    try {
+      const docRef = doc(database, "Products", id);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setProductsData({
+          _id: docSnap.id,
+          ...data
+        });
+        setSelectedSize(data.size[0]); 
+        setSelectedMaterial(Object.keys(data.material)[0]);
       }
-    });
+    } catch (error) {
+      console.error("Error fetching product:", error);
+    }
   };
-  
 
   useEffect(() => {
     fetchProductsData();
-  }, [id, food_list]);
+  }, [id]);
+
+  useEffect(() => {
+    if (productsData && selectedSize && selectedMaterial) {
+      const materialPrices = productsData.material[selectedMaterial];
+      setPrice(materialPrices[selectedGauge]);
+    }
+  }, [productsData, selectedSize, selectedMaterial, selectedGauge]);
 
   return productsData ? (
     <div className="product-container">
@@ -29,7 +49,7 @@ const Product = () => {
         <div className="product-images">
           <div className="main-image-container">
             <img
-              src={image}
+              src={productsData.imageLink}
               alt="product"
               className="main-image"
             />
@@ -37,7 +57,7 @@ const Product = () => {
         </div>
 
         <div className="product-details">
-          <h1 className="product-title">{productsData.name}</h1>
+          <h1 className="product-title">{productsData.prodName}</h1>
 
           <div className="ratings">
             <img src={assets.star_icon} alt="" className="star-icon" />
@@ -48,7 +68,35 @@ const Product = () => {
             <p className="rating-count">(122)</p>
           </div>
 
-          <p className="product-price">{productsData.price}</p>
+          <div className="product-options">
+            <div className="size-selector">
+              <label>Size:</label>
+              <select value={selectedSize} onChange={(e) => setSelectedSize(e.target.value)}>
+                {productsData.size.map((size) => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="material-selector">
+              <label>Material:</label>
+              <select value={selectedMaterial} onChange={(e) => setSelectedMaterial(e.target.value)}>
+                {Object.keys(productsData.material).map((material) => (
+                  <option key={material} value={material}>{material}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="gauge-selector">
+              <label>Gauge:</label>
+              <select value={selectedGauge} onChange={(e) => setSelectedGauge(e.target.value)}>
+                <option value="20G">20G</option>
+                <option value="22G">22G</option>
+              </select>
+            </div>
+          </div>
+
+          <p className="product-price">₹{price}</p>
           <p className="product-description">{productsData.description}</p>
 
           <button
@@ -86,7 +134,7 @@ const Product = () => {
           </p>
           <p>
             E-commerce websites typically display products or services along
-            with defailed descriptions, images, prices, and any ovalable
+            with detailed descriptions, images, prices, and any ovalable
             variations (eg, sizes colors). Each product uwaly has its ww
             dedicated page with relevant infurroution
           </p>
@@ -94,7 +142,7 @@ const Product = () => {
       </div>
     </div>
   ) : (
-    <div className="empty-state"></div>
+    <div className="empty-state">Loading...</div>
   );
 };
 
