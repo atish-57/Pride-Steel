@@ -9,6 +9,7 @@ import Navbar from './components/Navbar/Navbar.jsx'
 import Verify from './Pages/Verify/Verify'
 import MyOrders from './Pages/MyOrders/MyOrders'
 import Product from './pages/Products/Products'
+import { ToastContainer } from 'react-toastify'
 
 
 const App = () => {
@@ -29,6 +30,7 @@ const App = () => {
         </Routes>
       </div>
       <Footer />
+      <ToastContainer position="top-right" autoClose={3000} />
     </>
 
   )
