@@ -119,3 +119,18 @@
     background-color: #ccc;
     cursor: not-allowed;
 }
+
+.forgot-password {
+    text-align: right;
+    margin-top: 5px;
+}
+
+.forgot-password span {
+    color: #007bff;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.forgot-password span:hover {
+    text-decoration: underline;
+}

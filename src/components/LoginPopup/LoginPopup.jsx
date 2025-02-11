@@ -7,11 +7,14 @@ import {
   GoogleAuthProvider, 
   signInWithPopup, 
   sendEmailVerification, 
+  sendPasswordResetEmail,
   signOut 
 } from 'firebase/auth';
 import { auth, database } from '../../config/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, setDoc, doc } from 'firebase/firestore';
 import { use } from 'react';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const LoginPopup = ({ setShowLogin }) => {
     const [currState, setCurrState] = useState("Login");
@@ -62,16 +65,24 @@ const LoginPopup = ({ setShowLogin }) => {
             const user = result.user;
 
             if (user.emailVerified) {
+                await setDoc(doc(database, 'Users', user.uid), {
+                    name: user.displayName,
+                    email: user.email,
+                    cartData: [],
+                    createdAt: new Date()
+                }, { merge: true });
+                
+                toast.success('Successfully logged in with Google!');
                 setShowLogin(false);
             } else {
-                setError("Please verify your email before logging in.");
+                toast.error("Please verify your email before logging in.");
                 await signOut(auth);
             }
 
             setLoading(false);
         } catch (err) {
             setLoading(false);
-            setError(err.message);
+            toast.error(err.message);
         }
     };
 
@@ -83,35 +94,61 @@ const LoginPopup = ({ setShowLogin }) => {
         if (currState === "Login") {
             signInWithEmailAndPassword(auth, data.email, data.password)
                 .then(async (response) => {
+                    await response.user.reload();
                     if (response.user.emailVerified) {
-                        console.log('Logged in:', response.user);
-                        await fetchProducts();
+                        toast.success('Successfully logged in!');
                         setShowLogin(false);
                     } else {
-                        setError("Please verify your email before logging in.");
-                        signOut(auth);
+                        toast.error("Please verify your email before logging in.");
+                        await signOut(auth);
                     }
                     setLoading(false);
                 })
                 .catch((err) => {
                     setLoading(false);
-                    setError(err.message);
+                    toast.error("Invalid email or password");
                 });
         } else {
             createUserWithEmailAndPassword(auth, data.email, data.password)
                 .then(async (response) => {
-                    console.log('User created:', response.user);
-
                     await sendEmailVerification(response.user);
-                    setError("Verification email sent. Please verify your email before logging in.");
+                    
+                    await setDoc(doc(database, 'Users', response.user.uid), {
+                        name: data.name,
+                        email: data.email,
+                        cartData: [],
+                        createdAt: new Date()
+                    });
 
+                    toast.info("Verification email sent. Please verify your email and then login.");
+                    setCurrState("Login");
                     await signOut(auth);
                     setLoading(false);
                 })
                 .catch((err) => {
                     setLoading(false);
-                    setError(err.message);
+                    toast.error("Invalid email address");
                 });
+        }
+    };
+
+    const handleForgotPassword = async (e) => {
+        e.preventDefault();
+        if (!data.email) {
+            toast.error("Please enter your email address");
+            return;
+        }
+        
+        setLoading(true);
+        setError(null);
+        
+        try {
+            await sendPasswordResetEmail(auth, data.email);
+            toast.success("Password reset link sent to your email!");
+        } catch (err) {
+            toast.error("Invalid email address");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -149,6 +186,11 @@ const LoginPopup = ({ setShowLogin }) => {
                         placeholder='Password'
                         required
                     />
+                    {currState === "Login" && (
+                        <p className="forgot-password">
+                            <span onClick={handleForgotPassword}>Forgot Password?</span>
+                        </p>
+                    )}
                 </div>
                 {error && <p className="error-message">{error}</p>}
                 <button type="submit" disabled={loading}>
@@ -162,10 +204,10 @@ const LoginPopup = ({ setShowLogin }) => {
                 >
                     Continue with Google
                 </button>
-                <div className="login-popup-condition">
+                {/* <div className="login-popup-condition">
                     <input type="checkbox" required />
                     <p className='continuee'>By continuing, I agree to the terms of use & privacy policy</p>
-                </div>
+                </div> */}
                 {currState === "Login"
                     ? <p>Create a new account? <span onClick={() => setCurrState("Sign Up")}>Click here</span></p>
                     : <p>Already have an account? <span onClick={() => setCurrState("Login")}>Login here</span></p>
