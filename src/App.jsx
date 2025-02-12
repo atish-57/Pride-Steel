@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
-import Cart from './Pages/cart/Cart'
+import Cart from './pages/cart/Cart'
 import PlaceOrder from './Pages/PlaceOrder/PlaceOrder'
 import Home from './Pages/Home/Home'
 import Footer from './components/Footer/Footer'
@@ -10,7 +10,7 @@ import Verify from './Pages/Verify/Verify'
 import MyOrders from './Pages/MyOrders/MyOrders'
 import Product from './pages/Products/Products'
 import { ToastContainer } from 'react-toastify'
-
+import ProfilePage from './pages/Profile/ProfilePage'
 
 const App = () => {
 
@@ -27,6 +27,7 @@ const App = () => {
           <Route path='/verify' element={<Verify />} />
           <Route path='/myorders' element={<MyOrders />} />
           <Route path='/products/:id' element={<Product />} />
+          <Route path='/profile' element={<ProfilePage />} />
         </Routes>
       </div>
       <Footer />
