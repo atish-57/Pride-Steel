@@ -7,11 +7,24 @@ import { signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "./ProfilePage.css";
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, getDoc } from "firebase/firestore";
 
 const ProfilePage = () => {
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
+  const [userId, setUserId] = useState("");
   const navigate = useNavigate();
+  const [addresses, setAddresses] = useState([]);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [currentView, setCurrentView] = useState('overview');
+  const [editingAddress, setEditingAddress] = useState(null);
+  const [newAddress, setNewAddress] = useState({
+    street: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    isDefault: false
+  });
 
   useEffect(() => {
     // Check if user is logged in and get their email and name
@@ -20,6 +33,12 @@ const ProfilePage = () => {
         setUserEmail(user.email);
         // Get display name from auth, fallback to email if name not available
         setUserName(user.displayName || user.email.split('@')[0]);
+        setUserId(user.uid);
+
+        // Fetch addresses when user is authenticated
+        if (user.uid) {
+          fetchAddresses(user.uid);
+        }
       } else {
         // Redirect to login if no user is logged in
         navigate("/");
@@ -29,6 +48,205 @@ const ProfilePage = () => {
     // Cleanup subscription
     return () => unsubscribe();
   }, [navigate]);
+
+  const fetchAddresses = async (uid) => {
+    try {
+      const userDoc = await getDoc(doc(database, 'Users', uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setAddresses(userData.addresses || []);
+      }
+    } catch (error) {
+      toast.error("Error fetching addresses");
+    }
+  };
+
+  const handleAddAddress = async (e) => {
+    e.preventDefault();
+    try {
+      const userRef = doc(database, 'Users', userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const currentAddresses = userDoc.data().addresses || [];
+        const newAddressWithId = {
+          ...newAddress,
+          id: Date.now().toString(), // Generate a unique ID
+          createdAt: new Date()
+        };
+        
+        await updateDoc(userRef, {
+          addresses: [...currentAddresses, newAddressWithId]
+        });
+        
+        setAddresses([...currentAddresses, newAddressWithId]);
+        setShowAddressForm(false);
+        setNewAddress({ street: '', city: '', state: '', zipCode: '', isDefault: false });
+        toast.success("Address added successfully");
+      }
+    } catch (error) {
+      toast.error("Error adding address");
+    }
+  };
+
+  const handleUpdateAddress = async (e, addressId) => {
+    e.preventDefault();
+    try {
+      const userRef = doc(database, 'Users', userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const currentAddresses = userDoc.data().addresses || [];
+        const updatedAddresses = currentAddresses.map(addr => 
+          addr.id === addressId ? { ...editingAddress, id: addressId } : addr
+        );
+        
+        await updateDoc(userRef, {
+          addresses: updatedAddresses
+        });
+        
+        setAddresses(updatedAddresses);
+        setEditingAddress(null);
+        toast.success("Address updated successfully");
+      }
+    } catch (error) {
+      toast.error("Error updating address");
+    }
+  };
+
+  const handleDeleteAddress = async (addressId) => {
+    try {
+      const userRef = doc(database, 'Users', userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const currentAddresses = userDoc.data().addresses || [];
+        const updatedAddresses = currentAddresses.filter(addr => addr.id !== addressId);
+        
+        await updateDoc(userRef, {
+          addresses: updatedAddresses
+        });
+        
+        setAddresses(updatedAddresses);
+        toast.success("Address deleted successfully");
+      }
+    } catch (error) {
+      toast.error("Error deleting address");
+    }
+  };
+
+  const renderAddressContent = () => {
+    return (
+      <div className="address-management">
+        <h2>My Addresses</h2>
+        <button className="action-button" onClick={() => setShowAddressForm(true)}>
+          Add New Address
+        </button>
+
+        {showAddressForm && (
+          <form onSubmit={handleAddAddress} className="address-form">
+            <input
+              type="text"
+              placeholder="Street"
+              value={newAddress.street}
+              onChange={(e) => setNewAddress({...newAddress, street: e.target.value})}
+              required
+            />
+            <input
+              type="text"
+              placeholder="City"
+              value={newAddress.city}
+              onChange={(e) => setNewAddress({...newAddress, city: e.target.value})}
+              required
+            />
+            <input
+              type="text"
+              placeholder="State"
+              value={newAddress.state}
+              onChange={(e) => setNewAddress({...newAddress, state: e.target.value})}
+              required
+            />
+            <input
+              type="text"
+              placeholder="ZIP Code"
+              value={newAddress.zipCode}
+              onChange={(e) => setNewAddress({...newAddress, zipCode: e.target.value})}
+              required
+            />
+            <label>
+              <input
+                type="checkbox"
+                checked={newAddress.isDefault}
+                onChange={(e) => setNewAddress({...newAddress, isDefault: e.target.checked})}
+              />
+              Set as default address
+            </label>
+            <button type="submit">Save Address</button>
+            <button type="button" onClick={() => setShowAddressForm(false)}>Cancel</button>
+          </form>
+        )}
+
+        <div className="addresses-list">
+          {addresses.map((address) => (
+            <div key={address.id} className="address-card">
+              {editingAddress?.id === address.id ? (
+                <form onSubmit={(e) => handleUpdateAddress(e, address.id)} className="address-form">
+                  <input
+                    type="text"
+                    placeholder="Street"
+                    value={editingAddress.street}
+                    onChange={(e) => setEditingAddress({...editingAddress, street: e.target.value})}
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="City"
+                    value={editingAddress.city}
+                    onChange={(e) => setEditingAddress({...editingAddress, city: e.target.value})}
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="State"
+                    value={editingAddress.state}
+                    onChange={(e) => setEditingAddress({...editingAddress, state: e.target.value})}
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="ZIP Code"
+                    value={editingAddress.zipCode}
+                    onChange={(e) => setEditingAddress({...editingAddress, zipCode: e.target.value})}
+                    required
+                  />
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={editingAddress.isDefault}
+                      onChange={(e) => setEditingAddress({...editingAddress, isDefault: e.target.checked})}
+                    />
+                    Set as default address
+                  </label>
+                  <button type="submit">Save</button>
+                  <button type="button" onClick={() => setEditingAddress(null)}>Cancel</button>
+                </form>
+              ) : (
+                <>
+                  <p>{address.street}</p>
+                  <p>{address.city}, {address.state} {address.zipCode}</p>
+                  {address.isDefault && <span className="default-badge">Default</span>}
+                  <div className="address-actions">
+                    <button onClick={() => setEditingAddress({...address})}>Edit</button>
+                    <button onClick={() => handleDeleteAddress(address.id)}>Delete</button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   const handleLogout = async () => {
     try {
@@ -53,60 +271,62 @@ const ProfilePage = () => {
         <div className="sidebar-menu">
           <h2>Account Overview</h2>
           <ul>
-            <li>Address</li>
+            <li onClick={() => setCurrentView('addresses')}>Address</li>
             <li>Manage Orders</li>
           </ul>
+          <div className="logout-container">
+          <button className="logout-button" onClick={handleLogout}>
+            <BiLogOut /> Log out
+          </button>
+        </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="main-content">
-        <div className="cards-grid">
-          {/* Personal Info Card */}
-          <div className="card">
-            <div className="card-header">
-              <FaUser className="card-icon" />
-              <h2>Personal Info</h2>
-              
+        {currentView === 'overview' ? (
+          <div className="cards-grid">
+            {/* Personal Info Card */}
+            <div className="card">
+              <div className="card-header">
+                <FaUser className="card-icon" />
+                <h2>Personal Info</h2>
+                
+              </div>
+              <div className="card-content">
+                <p>Email: {userEmail}</p>
+              </div>
+              {/* <div>
+                <button className="action-button">Edit Info</button>
+                </div> */}
+                {/* You can add phone number here if you have it in your user data */}
             </div>
-            <div className="card-content">
-              <p>Email: {userEmail}</p>
-            </div>
-            {/* <div>
-              <button className="action-button">Edit Info</button>
-              </div> */}
-              {/* You can add phone number here if you have it in your user data */}
-          </div>
 
-          {/* Address Book Card */}
-          <div className="card">
-            <div className="card-header">
-              {/* <img src="/address-icon.png" alt="Address" className="card-icon" /> */}
-              <h2>Address Book</h2>
+            {/* Address Book Card */}
+            <div className="card">
+              <div className="card-header">
+                {/* <img src="/address-icon.png" alt="Address" className="card-icon" /> */}
+                <h2>Address Book</h2>
+              </div>
+              <p className="card-description">
+                Checkout faster with your saved addresses
+              </p>
+              <button className="action-button">Shipping Address</button>
             </div>
-            <p className="card-description">
-              Checkout faster with your saved addresses
-            </p>
-            <button className="action-button">Shipping Address</button>
-          </div>
 
-          {/* Manage Orders Card */}
-          <div className="card">
-            <div className="card-header">
-              <BsCart3 className="card-icon" />
-              <h2>Manage Orders</h2>
+            {/* Manage Orders Card */}
+            <div className="card">
+              <div className="card-header">
+                <BsCart3 className="card-icon" />
+                <h2>Manage Orders</h2>
+              </div>
+              <p className="card-description">Your online orders</p>
+              <button className="action-button">View Orders</button>
             </div>
-            <p className="card-description">Your online orders</p>
-            <button className="action-button">View Orders</button>
           </div>
-        </div>
-
-        {/* Logout Button */}
-        <div className="logout-container">
-          <button className="logout-button" onClick={handleLogout}>
-            <BiLogOut /> Log out
-          </button>
-        </div>
+        ) : currentView === 'addresses' ? (
+          renderAddressContent()
+        ) : null}
       </div>
     </div>
   );
