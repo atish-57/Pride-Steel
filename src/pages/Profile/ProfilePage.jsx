@@ -311,7 +311,7 @@ const ProfilePage = () => {
               <p className="card-description">
                 Checkout faster with your saved addresses
               </p>
-              <button className="action-button">Shipping Address</button>
+              <button className="action-button" onClick={() => setCurrentView('addresses')}>Shipping Address</button>
             </div>
 
             {/* Manage Orders Card */}
