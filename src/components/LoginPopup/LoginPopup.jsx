@@ -8,10 +8,11 @@ import {
   signInWithPopup, 
   sendEmailVerification, 
   sendPasswordResetEmail,
-  signOut 
+  signOut,
+  signInWithRedirect
 } from 'firebase/auth';
 import { auth, database } from '../../config/firebase';
-import { collection, getDocs, setDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, setDoc, doc, getDoc } from 'firebase/firestore';
 import { use } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -59,29 +60,29 @@ const LoginPopup = ({ setShowLogin }) => {
         setLoading(true);
         setError(null);
         const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
 
         try {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
+            const userDocRef = doc(database, 'Users', user.uid);
+            const userDocSnap = await getDoc(userDocRef);
 
-            if (user.emailVerified) {
-                await setDoc(doc(database, 'Users', user.uid), {
+            if (!userDocSnap.exists()) {
+                await setDoc(userDocRef, {
                     name: user.displayName,
                     email: user.email,
-                    cartData: [],
                     createdAt: new Date()
-                }, { merge: true });
-                
-                toast.success('Successfully logged in with Google!');
-                setShowLogin(false);
-            } else {
-                toast.error("Please verify your email before logging in.");
-                await signOut(auth);
+                });
             }
-
+            toast.success('Successfully logged in with Google!');
+            setShowLogin(false);
             setLoading(false);
         } catch (err) {
             setLoading(false);
+            setError(err.message);
             toast.error(err.message);
         }
     };
@@ -116,7 +117,6 @@ const LoginPopup = ({ setShowLogin }) => {
                     await setDoc(doc(database, 'Users', response.user.uid), {
                         name: data.name,
                         email: data.email,
-                        cartData: [],
                         createdAt: new Date()
                     });
 

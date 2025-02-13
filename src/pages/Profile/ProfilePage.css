@@ -77,10 +77,13 @@
 /* Card Styles */
 .card {
   background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  padding: 50px;
+  box-shadow: #cf383d4a 0 8px 24px;
   transition: transform 0.3s ease;
+  min-height: 15vh; /* Base height for large screens */
+  display: flex;
+  flex-direction: column;
 }
 
 .card:hover {
@@ -91,7 +94,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 50px;
 }
 
 .card-icon {
@@ -107,11 +110,16 @@
 
 .card-description {
   color: #666;
-  margin-bottom: 20px;
+  margin-bottom: 50px;
+  flex-grow: 1;
+}
+
+.card-content {
+  margin-bottom: 50px;
 }
 
 .card-content p {
-  margin: 8px 0;
+  margin: 20px 0;
   color: #333;
 }
 
@@ -183,7 +191,8 @@
   }
 
   .card {
-    padding: 20px;
+    min-height: 25vh; /* Increased height for tablet/mobile view */
+    padding: 40px;
   }
 }
 
@@ -204,6 +213,11 @@
     width: 100%;
     justify-content: center;
   }
+
+  .card {
+    min-height: 30vh; /* Further increased height for mobile */
+    padding: 30px;
+  }
 }
 
 /* For very small screens */
@@ -213,6 +227,7 @@
   }
 
   .card {
+    min-height: 35vh; /* Maximum height for very small screens */
     padding: 15px;
   }
 
@@ -306,7 +321,7 @@
   border-radius: 12px;
   position: relative;
   background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: #cf383d4a 0 8px 24px;
   transition: transform 0.3s ease;
 }
 
