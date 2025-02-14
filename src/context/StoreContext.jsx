@@ -39,7 +39,7 @@ const StoreContextProvider = (props) => {
     }
 
     const totoalAmoutCartAmount = () => {
-        let amountTotal = 5;
+        //let amountTotal = 5;
         // for (const item in cartItem) {
         //     if (cartItem[item] > 0) {
         //         let itemInfo = food_list.find((product) => product._id === item);

@@ -5,11 +5,13 @@ import { assets } from '../../assets/assets';
 import { StoreContext } from '../../context/StoreContext';
 import { getAuth, signOut } from 'firebase/auth';
 import { auth } from '../../config/firebase';
+import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
+import { database } from '../../config/firebase';
 
 const Navbar = ({ setShowLogin }) => {
     const [menu, setMenu] = useState("home");
     const [visible, setVisible] = useState(false);
-    const { totoalAmoutCartAmount } = useContext(StoreContext);
+    const [cartItemsCount, setCartItemsCount] = useState(0);
 
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
@@ -19,6 +21,27 @@ const Navbar = ({ setShowLogin }) => {
         const unsubscribe = auth.onAuthStateChanged(setUser);
         return () => unsubscribe(); // Cleanup subscription on unmount
     }, []);
+
+    useEffect(() => {
+        if (!user) {
+            setCartItemsCount(0);
+            return;
+        }
+
+        const userRef = doc(database, 'Users', user.uid);
+        
+        const unsubscribe = onSnapshot(userRef, (docSnapshot) => {
+            if (docSnapshot.exists()) {
+                const userData = docSnapshot.data();
+                const cartData = userData.cartData || [];
+                setCartItemsCount(cartData.length);
+            } else {
+                setCartItemsCount(0);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [user]);
 
     const logout = () => {
         signOut(auth)
@@ -43,8 +66,8 @@ const Navbar = ({ setShowLogin }) => {
             <div className="navbar-right">
                 <img src={assets.search_icon} alt="search icon" />
                 <div className="navbar-search-icon">
-                    <Link to='/cart' ><img src={assets.basket_icon} alt="basket icon" /></Link>
-                    <div className={totoalAmoutCartAmount() === 0 ? "" : "dot"}></div>
+                    <Link to='/cart'><img src={assets.basket_icon} alt="basket icon" /></Link>
+                    <div className={cartItemsCount === 0 ? "" : "dot"}></div>
                 </div>
                 {!user ? (
                     <>
