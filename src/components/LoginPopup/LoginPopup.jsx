@@ -110,6 +110,12 @@ const LoginPopup = ({ setShowLogin }) => {
                     toast.error("Invalid email or password");
                 });
         } else {
+            if (data.password.length < 6) {
+                setLoading(false);
+                toast.error("Password should be at least 6 characters long");
+                return;
+            }
+
             createUserWithEmailAndPassword(auth, data.email, data.password)
                 .then(async (response) => {
                     await sendEmailVerification(response.user);
@@ -127,7 +133,13 @@ const LoginPopup = ({ setShowLogin }) => {
                 })
                 .catch((err) => {
                     setLoading(false);
-                    toast.error("Invalid email address");
+                    if (err.code === 'auth/email-already-in-use') {
+                        toast.error("Email already in use");
+                    } else if (err.code === 'auth/invalid-email') {
+                        toast.error("Invalid email address");
+                    } else {
+                        toast.error(err.message);
+                    }
                 });
         }
     };
